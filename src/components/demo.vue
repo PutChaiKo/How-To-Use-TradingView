@@ -14,7 +14,7 @@ export default {
         debug: true,
         symbol: "BTC/USD",
         datafeed: datafeed,
-        interval: "15",
+        interval: "3",
         container_id: "div_container_id",
         library_path: "/static/custorm_scripts/charting_library/",
         locale: "zh",

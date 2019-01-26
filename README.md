@@ -106,7 +106,7 @@ options对象包含了主要的选项
     // 处理数据的函数，组件成功构建后会马上调用这个函数
     // 后面会详细说明
     datafeed: datafeed,
-    // 间隔
+    // 初始显示的时间精度
     interval: "15",
     // 需要在页面准备好一个id为div_container_id的空div
     container_id: "div_container_id",
@@ -237,7 +237,6 @@ onSymbolResolvedCallback({
     session: '24x7',
     // 交易所的时区，具体需要填的字符串需要去文档查
     // 小知识，因为它所使用的时区格式在制定的过程中的历史原因，这个表格里面找不到北京时间是正常的
-    // 股票涉及到开盘收盘和工作日的问题，如果时区填错将会导致数据错乱
     timezone: 'Etc/UTC',
     // 这个是查询时候使用的，与name可以不同
     // 以股票来说的话，这里应该设置的是股票代码
@@ -250,9 +249,9 @@ onSymbolResolvedCallback({
     pricescale: 100000000,
     // 是否有一日之内的历史数据
     has_intraday: true,
-    // 日内数据的分辨率
+    // 日内数据的精度
     intraday_multipliers: ['1', '60'],
-    // 支持的分辨率
+    // 支持的精度
     supported_resolution: ["1", "3", "5", "15", "30", "60", "120", "240", "D"],
     // 成交量显示的数字的小数位，如果是0则是整数，1则是0.1
     volume_precision: 8,
@@ -296,7 +295,7 @@ bars的格式是这样子的：
 这里就需要一点点的金融知识，TV使用的是股票图表常用的”[美国线](https://zh.wikipedia.org/wiki/%E7%BE%8E%E5%9C%8B%E7%B7%9A)“，用一条竖着的线条来表示一个时间周期的开盘价、最高价、最低价、收盘价以及成交量，所以传输数据的时候也需要提供相应的参数，如果不想显示成交量可以将它设置为0,或者TV有其它隐藏成交量的方式我没发现。  
 > 炒股的同学别取笑我，我是在使用TV的时候才懂得看K线图的
 
-### 获取真正的数据  
+## 获取真正的数据  
 
 用假数据总不是办法，前面不是说过要自备数据么，有不少免费提供数据的API，例如[CryptoCompare](https://min-api.cryptocompare.com/)，前端只需要自行接入就行，获取数据的思路是：
 
@@ -313,3 +312,57 @@ npm install --save request-promise
 
 新建一个getApiData.js文件专门获取和整理数据  
 
+```javascript
+const rp = require('request-promise');
+export default (symbolInfo, resolution) => {
+  console.log('getdata异步函数被调用', symbolInfo, resolution);
+  const mainUrl = 'https://min-api.cryptocompare.com/data';
+  // 处理时间精度
+  let resolutionUrl;
+  if (resolution === '1') {
+    resolutionUrl = '/histominute?';
+  } else if (resolution === '60') {
+    resolutionUrl = '/histohour?';
+  } else if (resolution === 'D' || resolution === '1D' ) {
+    resolutionUrl = '/histoday?';
+  } else {
+    console.warn('supported_resolution设置不正确');
+  }
+  // 处理交易对
+  const symbolArr = symbolInfo.name.split('/');
+  const url = mainUrl + resolutionUrl + `fsym=${symbolArr[0]}&tsym=${symbolArr[1]}&limit=2000`;
+  console.log(`调用的链接cryptocompare是：${url}`);
+  return rp(url)
+    .then((data) => {
+      //   console.log(JSON.parse(data));
+      const formatData = JSON.parse(data).Data.map((item) => {
+        const { close, high, low, open, time, volumefrom, volumeto } = item;
+        return {
+          time: time * 1000,
+          low,
+          high,
+          open,
+          close,
+          volume: volumeto,
+        };
+      });
+      return formatData;
+    })
+    .catch((err) => {
+      console.warn('api调取错误', err);
+    });
+};
+```
+
+
+因为 cryptocompare 提供了三种精度的数据，分别为1分钟、1小时、1天，所以需要判断resolution参数来组成不同的请求链接。  
+但是在TV的界面上可以发现它提供给用户的不止三个精度，从间隔15分钟到1月的数据都有，而且不做改动的话用户还可以随便选精度。这是因为TV将获取的数据进行了整合，如果用户想要5分钟间隔的图表，TV看到支持的精度 supported_resolution 数组里面没有的话就会去取低于目的精度的1分钟间隔的数据，然后拼成5分钟的间隔数据。   
+
+其中关键的代码是  
+```javascript
+return rp(url).then((data) => {
+  // 把data处理好格式后
+  return data;
+});
+```
+rq是一个promise对象包装好的请求异步函数，将rp
