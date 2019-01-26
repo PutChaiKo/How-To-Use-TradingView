@@ -1,5 +1,18 @@
 # TradingView使用教程  
 
+## 运行demo
+
+```bash
+# 将项目clone到本地
+git clone https://github.com/PutChaiKo/How-To-Use-TradingView.git
+# 进入项目目录
+cd ./How-To-Use-TradingView
+# 安装依赖
+npm i
+# 运行
+npm run dev
+```
+
 ## TradingView是什么  
 
 TradingView（下称TV）是一个免费的图表工具，用于显示类似于股票行情的图表，在加密货币领域这个工具非常受欢迎，很多网站都用了这个工具。  
