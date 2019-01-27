@@ -41,7 +41,6 @@ export default {
   ) {
     console.log('getBars被调用');
     const historyData = await getData(symbolInfo, resolution);
-    // console.log('getBars被调用');
     onHistoryCallback(historyData);
   },
   subscribeBars: (

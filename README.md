@@ -334,7 +334,6 @@ export default (symbolInfo, resolution) => {
   console.log(`调用的链接cryptocompare是：${url}`);
   return rp(url)
     .then((data) => {
-      //   console.log(JSON.parse(data));
       const formatData = JSON.parse(data).Data.map((item) => {
         const { close, high, low, open, time, volumefrom, volumeto } = item;
         return {
@@ -365,4 +364,42 @@ return rp(url).then((data) => {
   return data;
 });
 ```
-rq是一个promise对象包装好的请求异步函数，将rp
+rq是一个Promise对象包装好的请求异步函数，将rp函数return回去也会获得一个新的Promise函数，再通过async await的方法异步请求这个函数。
+
+## 获取历史数据的一些坑和补充的东西  
+
+### 无限请求接口的问题
+
+TV 的 getBars 函数里面有一个 from to 参数，还有一个 firstDataRequest 参数，前者的意思是TV想要这个时间段的数据，如果它获取的数据的时间戳没有覆盖from和to，就会导致TV不断地去调取接口，正如demo里面的cryptocompare，它不是按照时间范围，而是只按照条数来提供数据，最多2000条，如果是调取了分钟的接口，再被TV转换为45分钟间隔的数据，2000分钟也只有45条左右的有效数据，用户稍微缩小一下窗口就会引发无限更新。  
+解决方法有很多，可以要求后台按照时间范围去吐数据，但是有时候后台也无能为力，例如加密货币在2014年才出现，如果以一个月为间隔一个图表轻松就能显示完成。
+可以根据firstDataRequest参数来限制请求次数。  
+可以在前台限制用户点击的时间精度，这个可以通过配置TV来实现，也可以通过禁用TV自带的选择框自己在前端写选择框来配置interval的数值，这样子比较合适不熟悉TV的人，但是每修改一个参数就要重新构建一遍TV，如果是更换语言等参数的话就只能这样子重修构建。  
+
+### 搜索
+
+TV还提供了很多工具，例如可以自己输入参数获取相应的数据，还可以添加标记，要一一接入还是很麻烦的，但是基本原理和getBar()差不多，如果要一一禁用，用外部参数重新构建TV的方法，要一个个禁用也是挺麻烦的，需要在官方文档一个个找设计。  
+
+### 样式  
+
+TV可自定义的样式的地方特别丰富，定义的时候一般是这样子的  
+
+```javascript
+overrides: {
+  "paneProperties.background": "#131722",
+  "paneProperties.vertGridProperties.color": "#363c4e",
+  "paneProperties.horzGridProperties.color": "#363c4e",
+  "symbolWatermarkProperties.transparency": 90,
+  "scalesProperties.textColor" : "#AAA",
+  "mainSeriesProperties.candleStyle.wickUpColor": '#336854',
+  "mainSeriesProperties.candleStyle.wickDownColor": '#7f323f',
+}
+```
+
+需要去官方文档翻各个地方的key，以及多试试。  
+
+## 获取实时数据  
+
+上面的配置已经已经可以做到获取数据了，是通过get请求的方式，如果愿意，写一个轮询的函数隔一段时间去请求一下历史数据也可以做到实时更新。  
+不过轮询非常浪费资源，浪费用户的资源也浪费服务器的资源，最好的解决办法是通过WebSocket推送数据。  
+
+## WebSocket
