@@ -401,14 +401,19 @@ overrides: {
 
 上面的配置已经已经可以做到获取数据了，是通过get请求的方式，如果愿意，写一个轮询的函数隔一段时间去请求一下历史数据也可以做到实时更新。  
 不过轮询非常浪费资源，浪费用户的资源也浪费服务器的资源，最好的解决办法是通过WebSocket推送数据。  
-CryptoCompare也提供了官方的demo在[这里](https://github.com/cryptoqween/cryptoqween.github.io) 
+CryptoCompare也支持WebSocket的方式获取实时数据，但它的[文档](https://min-api.cryptocompare.com/documentation?key=Streaming&cat=subsByPairEndpoint)写得并不是很清楚，不过好在它提供了[官方的demo](https://github.com/cryptoqween/cryptoqween.github.io) 
 
 ## WebSocket  
 
 [WebSocket](https://zh.wikipedia.org/wiki/WebSocket)（下称ws）的一大特点是支持双向通信，从发布至今大部分浏览器都对它进行了兼容。  
-要测试常见的get、post请求，我们会用postman，postman暂时还不支持ws协议，要查看ws连接现在最方便的工具是Chrome。  
+要写一个简单的ws连接可以这样子写：  
 
 ```javascript
-var webSocket = new WebSocket('https://streamer.cryptocompare.com/');
-webSocket.onmessage = function(data) { console.log(data); }
+const socket = require('socket.io-client')('wss://streamer.cryptocompare.com');
+socket.on('m', (e) => {console.log('ws', e)})
+socket.emit('SubAdd', {subs: ["0~Coinbase~BTC~USD"]})
 ```
+
+这是在nodejs环境下的写法，用到的库是socket.io-client（传统html写法可以参考上面的官方demo）。一步步来说，先用require的方式把库加载到当前环境里，这个库其实暴露出来的是一个函数，这个函数接收一个参数就是ws或wss打头的链接字符串，再把这个函数运行的结果赋值给变量socket。  
+socket.on()接收两个参数，第一个参数是一个字符串，其中m代表的是move，也就是获得一条新数据的时候，第二个参数是一个回调函数，cb函数传进来的参数就是ws服务器发来的消息。  
+写好了怎么处理拿到的数据后，就可以通过socket.emit()的方法向服务器请求连接并且发送参数，在这个代码里，SubAdd是用于激活ws服务端某些函数的代码，由双方约定好的，后面的对象是传给SubAdd对应后端函数的对象，在这个ws连接里可以在数组里面传多个字符串，字符串由~分割，第一个是ws的连接代码，第二个是交易所的代号，第三个是需要兑换的货币，第四个是基准货币。  

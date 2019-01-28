@@ -1,5 +1,4 @@
-var io = require('socket.io-client')
-var socket = io('wss://streamer.cryptocompare.com')
+const socket = require('socket.io-client')('wss://streamer.cryptocompare.com');
 
 socket.on('connect', () => {
   console.log('ws已连接')
