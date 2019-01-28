@@ -12,6 +12,7 @@
   "dependencies": {
     "request": "^2.88.0",
     "request-promise": "^4.2.2",
+    "socket.io-client": "^2.2.0",
     "vue": "^2.5.2",
     "vue-router": "^3.0.1"
   },

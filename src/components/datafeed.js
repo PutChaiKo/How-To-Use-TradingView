@@ -1,4 +1,5 @@
 import getData from './getApiData';
+import link from './link';
 
 export default {
   onReady: (cb) => {
@@ -42,6 +43,7 @@ export default {
     console.log('getBars被调用');
     const historyData = await getData(symbolInfo, resolution);
     onHistoryCallback(historyData);
+    link.emit();
   },
   subscribeBars: (
     symbolInfo,

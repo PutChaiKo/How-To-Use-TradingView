@@ -401,6 +401,7 @@ overrides: {
 
 上面的配置已经已经可以做到获取数据了，是通过get请求的方式，如果愿意，写一个轮询的函数隔一段时间去请求一下历史数据也可以做到实时更新。  
 不过轮询非常浪费资源，浪费用户的资源也浪费服务器的资源，最好的解决办法是通过WebSocket推送数据。  
+CryptoCompare也提供了官方的demo在[这里](https://github.com/cryptoqween/cryptoqween.github.io) 
 
 ## WebSocket  
 
@@ -408,6 +409,6 @@ overrides: {
 要测试常见的get、post请求，我们会用postman，postman暂时还不支持ws协议，要查看ws连接现在最方便的工具是Chrome。  
 
 ```javascript
-var webSocket = new WebSocket('ws://address:port');
+var webSocket = new WebSocket('https://streamer.cryptocompare.com/');
 webSocket.onmessage = function(data) { console.log(data); }
 ```
